@@ -1,0 +1,698 @@
+# =============================================================================
+# Prompt Templates for LLM Agents
+# =============================================================================
+# All prompts must include reasoning field for post-analysis improvement.
+# Variables use $variable_name syntax (Python Template).
+# =============================================================================
+
+templates:
+  # ---------------------------------------------------------------------------
+  # Sentiment Analysis Prompt
+  # ---------------------------------------------------------------------------
+  sentiment_analysis:
+    version: "1.0.0"
+    description: "앱 리뷰 감성 분석 프롬프트"
+    required_variables:
+      - app_name
+      - rating
+      - content
+    optional_variables:
+      - additional_context
+    template: |
+      다음 앱 리뷰를 분석하고 JSON 형식으로 응답하세요.
+
+      [리뷰 정보]
+      앱: $app_name
+      평점: $rating/5
+      내용: $content
+
+      [분석 항목]
+      1. 감성 분류: **반드시** 다음 5가지 값 중 **정확히 하나만** 사용하세요.
+         - very_negative (매우 부정)
+         - negative (부정)
+         - neutral (중립)
+         - positive (긍정)
+         - very_positive (매우 긍정)
+         **주의**: slightly_negative, mixed, moderately_positive 등 다른 변형 값은 절대 사용 금지
+      2. 감성 점수: 1(매우 부정) ~ 5(매우 긍정)
+      3. 감지된 감정: anger, frustration, disappointment, satisfaction, gratitude, excitement 등
+      4. 신뢰도: 0.0 ~ 1.0
+
+      [중요] reasoning 필드에 판단 근거를 반드시 상세히 기술하세요.
+
+      [응답 형식]
+      {
+        "result": {
+          "sentiment_label": "감성라벨",
+          "sentiment_score": 1-5,
+          "emotions": ["감정1", "감정2"],
+          "confidence": 0.0-1.0
+        },
+        "reasoning": {
+          "summary": "한 문장으로 요약한 판단 근거",
+          "steps": [
+            {
+              "step_number": 1,
+              "description": "분석 단계 설명",
+              "evidence": "근거가 되는 리뷰 내 텍스트",
+              "confidence": 0.9
+            }
+          ],
+          "key_factors": ["판단에 영향을 준 주요 요소들"],
+          "evidence_quotes": ["직접 인용한 텍스트들"],
+          "alternative_interpretations": ["다르게 해석될 여지가 있는 부분"],
+          "confidence_factors": {
+            "positive": ["신뢰도를 높이는 요소"],
+            "negative": ["신뢰도를 낮추는 요소"]
+          }
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Complaint Classification Prompt
+  # ---------------------------------------------------------------------------
+  complaint_classification:
+    version: "1.0.0"
+    description: "민원 분류 및 부서 배정 프롬프트"
+    required_variables:
+      - app_name
+      - rating
+      - content
+      - sentiment_label
+      - department_codes
+    optional_variables:
+      - previous_complaints
+    template: |
+      다음 앱 리뷰가 민원인지 분석하고, 민원이라면 유형과 담당 부서를 분류하세요.
+
+      [리뷰 정보]
+      앱: $app_name
+      평점: $rating/5
+      내용: $content
+      감성: $sentiment_label
+
+      [민원 유형]
+      - general_review: 일반 리뷰 (민원 아님)
+      - praise: 칭찬 (민원 아님)
+      - improvement_request: 개선 요청
+      - dissatisfaction: 불만 민원
+      - error_report: 오류 신고
+      - damage_report: 피해 신고 (금전적/보안 피해)
+      - legal_issue: 법적 이슈 (금감원, 소송 등 언급)
+
+      [긴급도 기준]
+      - 4 (Critical): 금전 피해, 보안 사고, 법적 이슈
+      - 3 (High): 서비스 장애, 반복 오류
+      - 2 (Medium): 기능 오류, 불편 민원
+      - 1 (Low): 개선 요청, 일반 문의
+
+      [부서 코드]
+      $department_codes
+
+      [중요]
+      - 민원 판단 근거를 reasoning 필드에 반드시 기술
+      - 왜 해당 부서가 적합한지 이유를 명시
+      - 다른 부서가 담당할 가능성도 기술
+
+      [응답 형식]
+      {
+        "result": {
+          "is_complaint": true/false,
+          "complaint_type": "민원유형",
+          "sub_type": "상세유형",
+          "urgency": 1-4,
+          "severity": 1-5,
+          "primary_dept": {
+            "code": "부서코드",
+            "name": "부서명"
+          },
+          "secondary_depts": [
+            {"code": "부서코드", "role": "협조/검토/승인"}
+          ],
+          "escalation_required": true/false,
+          "escalation_level": "담당자/팀장/본부장/임원",
+          "confidence": 0.0-1.0
+        },
+        "reasoning": {
+          "summary": "민원 여부 및 부서 배정 판단 요약",
+          "steps": [
+            {
+              "step_number": 1,
+              "description": "민원 여부 판단",
+              "evidence": "근거 텍스트",
+              "confidence": 0.9
+            },
+            {
+              "step_number": 2,
+              "description": "민원 유형 분류 근거",
+              "evidence": "근거 텍스트",
+              "confidence": 0.85
+            },
+            {
+              "step_number": 3,
+              "description": "담당 부서 선정 이유",
+              "evidence": "근거",
+              "confidence": 0.8
+            }
+          ],
+          "key_factors": ["부서 선정에 영향을 준 요소"],
+          "evidence_quotes": ["인용문"],
+          "department_selection_rationale": {
+            "selected_reason": "선택한 부서 이유",
+            "alternatives_considered": [
+              {"dept": "다른부서", "why_not": "선택하지 않은 이유"}
+            ]
+          }
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Category Classification Prompt
+  # ---------------------------------------------------------------------------
+  category_classification:
+    version: "1.0.0"
+    description: "리뷰 카테고리 및 메트릭 분류 프롬프트"
+    required_variables:
+      - content
+      - categories
+    optional_variables: []
+    template: |
+      다음 앱 리뷰의 카테고리와 관련 메트릭을 분류하세요.
+
+      [리뷰 내용]
+      $content
+
+      [카테고리 목록]
+      $categories
+
+      [메트릭 분류 기준]
+      - feature: 기능 관련 (로그인, 이체, 조회 등)
+      - service: 서비스 관련 (고객센터, 상담 등)
+      - performance: 성능/속도 관련 (느림, 버벅임, 로딩 등)
+      - related_screen: 관련 화면/서비스 (어떤 화면에서 발생했는지)
+
+      [응답 형식]
+      {
+        "result": {
+          "primary_category": "주요 카테고리",
+          "secondary_categories": ["보조 카테고리들"],
+          "metrics": {
+            "feature": {
+              "detected": true/false,
+              "keywords": ["키워드들"],
+              "sub_categories": ["세부 분류"]
+            },
+            "service": {
+              "detected": true/false,
+              "keywords": ["키워드들"],
+              "sub_categories": ["세부 분류"]
+            },
+            "performance": {
+              "detected": true/false,
+              "keywords": ["키워드들"],
+              "issues": ["성능 이슈 유형"]
+            },
+            "related_screen": {
+              "detected": true/false,
+              "screens": ["관련 화면"],
+              "services": ["관련 서비스"]
+            }
+          },
+          "confidence": 0.0-1.0
+        },
+        "reasoning": {
+          "summary": "분류 판단 요약",
+          "key_factors": ["분류에 영향을 준 요소"],
+          "evidence_quotes": ["근거 인용문"]
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Insight Generation Prompt
+  # ---------------------------------------------------------------------------
+  insight_generation:
+    version: "1.0.0"
+    description: "리뷰 데이터 기반 인사이트 생성 프롬프트"
+    required_variables:
+      - app_name
+      - period
+      - review_summary
+      - sentiment_distribution
+      - top_issues
+      - top_praises
+    optional_variables:
+      - comparison_period
+      - competitor_data
+    template: |
+      다음 앱 리뷰 데이터를 분석하여 인사이트를 생성하세요.
+
+      [분석 대상]
+      앱: $app_name
+      기간: $period
+
+      [리뷰 요약]
+      $review_summary
+
+      [감성 분포]
+      $sentiment_distribution
+
+      [주요 이슈 (부정)]
+      $top_issues
+
+      [주요 칭찬 (긍정)]
+      $top_praises
+
+      [분석 항목]
+      1. 핵심 인사이트 요약 (3-5개)
+      2. 트렌드 분석 (증가/감소/유지)
+      3. 근본 원인 분석
+      4. 구체적 개선 제안
+      5. 우선순위 권장
+
+      [응답 형식]
+      {
+        "result": {
+          "executive_summary": "경영진용 한 문단 요약",
+          "key_insights": [
+            {
+              "title": "인사이트 제목",
+              "description": "상세 설명",
+              "impact": "high/medium/low",
+              "trend": "increasing/decreasing/stable"
+            }
+          ],
+          "root_causes": [
+            {
+              "issue": "이슈",
+              "cause": "근본 원인",
+              "evidence": "근거"
+            }
+          ],
+          "recommendations": [
+            {
+              "title": "개선 제안",
+              "description": "상세 설명",
+              "priority": 1-5,
+              "expected_impact": "기대 효과",
+              "responsible_dept": "담당 부서"
+            }
+          ]
+        },
+        "reasoning": {
+          "summary": "인사이트 도출 과정 요약",
+          "data_points_used": ["사용된 데이터 포인트"],
+          "assumptions": ["가정사항"],
+          "limitations": ["분석 한계점"]
+        }
+      }
+
+      }
+
+  # ---------------------------------------------------------------------------
+  # Unified Analysis Prompt (Sentiment + Category + Complaint)
+  # ---------------------------------------------------------------------------
+  unified_analysis:
+    version: "1.0.0"
+    description: "통합 리뷰 분석 프롬프트 (감성, 카테고리, 민원)"
+    required_variables:
+      - app_name
+      - rating
+      - content
+      - categories
+      - department_codes
+    optional_variables:
+      - additional_context
+      - previous_complaints
+    template: |
+      다음 앱 리뷰를 종합적으로 분석하여 감성, 카테고리, 민원 여부를 판단하세요.
+
+      [리뷰 정보]
+      앱: $app_name
+      평점: $rating/5
+      내용: $content
+
+      [분석 지침]
+      1. 감성 분석: **반드시** 다음 5가지 값 중 **정확히 하나만** 사용
+         - very_negative, negative, neutral, positive, very_positive
+         **금지**: slightly_negative, mixed, moderately_positive 등 변형 값 사용 금지
+         - 점수: 1-5
+      2. 카테고리 분류: 아래 목록 중 가장 적합한 Primary/Secondary 카테고리 선택
+      3. 민원 분석: 민원 여부, 유형, 긴급도, 담당 부서(Primary/Secondary) 배정
+
+      [카테고리 목록]
+      $categories
+
+      [부서 코드]
+      $department_codes
+
+      [민원 유형]
+      - general_review, praise, improvement_request, dissatisfaction, error_report, damage_report, legal_issue
+
+      [응답 형식]
+      {
+        "result": {
+          "sentiment": {
+            "sentiment_label": "감성라벨",
+            "sentiment_score": 1-5,
+            "emotions": ["감정1", "감정2"],
+            "confidence": 0.0-1.0
+          },
+          "category": {
+            "primary_category": "주요 카테고리",
+            "secondary_categories": ["보조 카테고리들"],
+            "metrics": {
+              "feature": {"detected": true/false, "keywords": [], "sub_categories": []},
+              "service": {"detected": true/false, "keywords": [], "sub_categories": []},
+              "performance": {"detected": true/false, "keywords": [], "issues": []},
+              "related_screen": {"detected": true/false, "screens": [], "services": []}
+            },
+            "confidence": 0.0-1.0
+          },
+          "complaint": {
+            "is_complaint": true/false,
+            "complaint_type": "민원유형",
+            "sub_type": "상세유형",
+            "urgency": 1-4,
+            "severity": 1-5,
+            "primary_dept": {"code": "부서코드", "name": "부서명"},
+            "secondary_depts": [{"code": "부서코드", "role": "협조"}],
+            "escalation_required": true/false,
+            "escalation_level": "담당자/팀장/본부장/임원",
+            "confidence": 0.0-1.0
+          },
+          "confidence": 0.0-1.0
+        },
+        "reasoning": {
+          "summary": "종합 분석 요약",
+          "steps": [
+            {"step_number": 1, "description": "감성 분석 근거", "evidence": "...", "confidence": 0.9},
+            {"step_number": 2, "description": "카테고리 분류 근거", "evidence": "...", "confidence": 0.8},
+            {"step_number": 3, "description": "민원 판단 및 부서 배정 근거", "evidence": "...", "confidence": 0.85}
+          ],
+          "key_factors": ["주요 판단 요소"],
+          "evidence_quotes": ["인용문"],
+          "confidence_factors": {"positive": [], "negative": []}
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Quick Classification Prompt (Two-Stage Pipeline - Stage 1)
+  # ---------------------------------------------------------------------------
+  quick_classification:
+    version: "1.0.0"
+    description: "빠른 감성 및 카테고리 분류 (Stage 1 - 모든 리뷰)"
+    required_variables:
+      - app_name
+      - rating
+      - content
+      - categories
+    optional_variables:
+      - additional_context
+    template: |
+      다음 앱 리뷰를 빠르게 분석하여 감성과 카테고리를 판단하고 json 형식으로 응답하세요.
+
+      [리뷰 정보]
+      앱: $app_name
+      평점: $rating/5
+      내용: $content
+
+      [분석 지침]
+      1. 감성 분석: **반드시** 다음 5가지 값 중 **정확히 하나만** 사용
+         - very_negative, negative, neutral, positive, very_positive
+         **금지**: slightly_negative, mixed, moderately_positive 등 변형 값 사용 금지
+         - 점수: 1-5
+      2. 카테고리 분류: 아래 목록 중 가장 적합한 Primary/Secondary 카테고리 선택
+
+      [카테고리 목록]
+      $categories
+
+      [응답 형식]
+      {
+        "result": {
+          "sentiment": {
+            "sentiment_label": "감성라벨",
+            "sentiment_score": 1-5,
+            "emotions": ["감정1", "감정2"],
+            "confidence": 0.0-1.0
+          },
+          "category": {
+            "primary_category": "주요 카테고리",
+            "secondary_categories": ["보조 카테고리들"],
+            "confidence": 0.0-1.0
+          }
+        },
+        "reasoning": {
+          "summary": "빠른 분류 근거 요약",
+          "key_factors": ["주요 판단 요소"]
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Detailed Complaint Analysis Prompt (Two-Stage Pipeline - Stage 2)
+  # ---------------------------------------------------------------------------
+  detailed_complaint_analysis:
+    version: "1.0.0"
+    description: "민원 상세 분석 및 부서 배정 (Stage 2 - 민원성 리뷰만)"
+    required_variables:
+      - app_name
+      - content
+      - sentiment_label
+      - primary_category
+      - department_codes
+    optional_variables:
+      - secondary_categories
+      - additional_context
+    template: |
+      다음 민원성 리뷰에 대해 상세 분석 및 담당 부서를 배정하고 json 형식으로 응답하세요.
+
+      [리뷰 정보]
+      앱: $app_name
+      내용: $content
+      감성: $sentiment_label
+      카테고리: $primary_category
+
+      [부서 코드]
+      $department_codes
+
+      [민원 유형]
+      - general_review: 일반 피드백
+      - praise: 칭찬
+      - improvement_request: 개선 요청
+      - dissatisfaction: 불만
+      - error_report: 오류 신고
+      - damage_report: 피해 신고
+      - legal_issue: 법적 문제
+
+      [응답 형식]
+      {
+        "result": {
+          "complaint": {
+            "is_complaint": true,
+            "complaint_type": "민원유형",
+            "sub_type": "상세유형",
+            "urgency": 1-4,
+            "severity": 1-5,
+            "primary_dept": {"code": "부서코드", "name": "부서명"},
+            "secondary_depts": [{"code": "부서코드", "role": "협조"}],
+            "escalation_required": true/false,
+            "escalation_level": "담당자/팀장/본부장/임원",
+            "confidence": 0.0-1.0
+          }
+        },
+        "reasoning": {
+          "summary": "민원 판단 및 부서 배정 근거",
+          "steps": [
+            {"step_number": 1, "description": "민원 유형 분석", "evidence": "...", "confidence": 0.9},
+            {"step_number": 2, "description": "담당 부서 선정 근거", "evidence": "...", "confidence": 0.85}
+          ],
+          "key_factors": ["주요 판단 요소"],
+          "evidence_quotes": ["인용문"]
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Natural Language Query Prompt
+  # ---------------------------------------------------------------------------
+  natural_language_query:
+    version: "1.0.0"
+    description: "자연어 질의 응답 프롬프트"
+    required_variables:
+      - user_query
+      - available_data
+      - context
+    optional_variables:
+      - previous_queries
+    template: |
+      사용자의 자연어 질문에 대해 데이터를 분석하고 답변하세요.
+
+      [사용자 질문]
+      $user_query
+
+      [활용 가능한 데이터]
+      $available_data
+
+      [컨텍스트]
+      $context
+
+      [응답 지침]
+      1. 질문의 의도를 정확히 파악
+      2. 관련 데이터를 기반으로 답변
+      3. 수치가 있다면 구체적으로 제시
+      4. 불확실한 부분은 명시
+
+      [응답 형식]
+      {
+        "result": {
+          "answer": "질문에 대한 답변",
+          "data_used": ["사용된 데이터"],
+          "confidence": 0.0-1.0,
+          "follow_up_suggestions": ["추가 질문 제안"]
+        },
+        "reasoning": {
+          "query_interpretation": "질문 해석",
+          "analysis_steps": ["분석 단계"],
+          "data_sources": ["데이터 출처"]
+        }
+      }
+
+# =============================================================================
+# Department Codes Configuration
+# =============================================================================
+
+department_codes:
+  IT_APP:
+    name: "IT/앱개발"
+    description: "앱 오류, 버그, 크래시, 업데이트 관련"
+    keywords:
+      - 튕김
+      - 오류
+      - 버그
+      - 업데이트
+      - 크래시
+      - 앱
+      - 설치
+
+  IT_INFRA:
+    name: "IT인프라"
+    description: "서버, 속도, 접속 장애 관련"
+    keywords:
+      - 느림
+      - 접속불가
+      - 서버오류
+      - 로딩
+      - 타임아웃
+
+  IT_SEC:
+    name: "정보보안"
+    description: "보안, 해킹, 인증 관련"
+    keywords:
+      - 해킹
+      - 비밀번호
+      - 인증서
+      - 보안
+      - 유출
+      - 무단
+
+  CS_CENTER:
+    name: "고객센터"
+    description: "일반 문의, 불만 응대"
+    keywords:
+      - 상담
+      - 문의
+      - 전화
+      - 고객센터
+
+  BIZ_CARD:
+    name: "카드사업"
+    description: "카드 발급, 한도, 혜택 관련"
+    keywords:
+      - 카드
+      - 한도
+      - 포인트
+      - 혜택
+      - 발급
+
+  BIZ_LOAN:
+    name: "여신사업"
+    description: "대출, 금리, 심사 관련"
+    keywords:
+      - 대출
+      - 금리
+      - 한도
+      - 심사
+      - 연체
+
+  BIZ_DEPOSIT:
+    name: "수신사업"
+    description: "예금, 적금, 이자 관련"
+    keywords:
+      - 예금
+      - 적금
+      - 이자
+      - 통장
+
+  BIZ_REMIT:
+    name: "외환/송금"
+    description: "해외송금, 환전 관련"
+    keywords:
+      - 송금
+      - 환전
+      - 해외
+      - 외화
+
+  COMPLIANCE:
+    name: "준법감시"
+    description: "법규 위반, 민원 심화"
+    keywords:
+      - 신고
+      - 금감원
+      - 민원
+      - 규정
+
+  LEGAL:
+    name: "법무"
+    description: "법적 분쟁, 개인정보"
+    keywords:
+      - 소송
+      - 고소
+      - 개인정보
+      - 법적
+
+  UX_DESIGN:
+    name: "UX/디자인"
+    description: "UI 개선, 사용성"
+    keywords:
+      - 불편
+      - 디자인
+      - 찾기어려움
+      - UI
+      - 화면
+
+  MARKETING:
+    name: "마케팅"
+    description: "이벤트, 프로모션"
+    keywords:
+      - 이벤트
+      - 쿠폰
+      - 광고
+      - 프로모션
+
+# =============================================================================
+# Review Categories Configuration
+# =============================================================================
+
+review_categories:
+  - login: "로그인/인증"
+  - transfer: "이체/송금"
+  - payment: "결제"
+  - inquiry: "조회"
+  - card: "카드"
+  - loan: "대출"
+  - savings: "예적금"
+  - customer_service: "고객서비스"
+  - event: "이벤트/혜택"
+  - ui_ux: "UI/UX"
+  - performance: "성능/속도"
+  - security: "보안"
+  - notification: "알림/푸시"
+  - other: "기타"

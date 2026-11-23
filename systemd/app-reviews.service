@@ -1,0 +1,27 @@
+[Unit]
+Description=App Reviews Analysis System (Flask Web Service)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/korean-review-hybrid-retrieval
+# Environment variables
+Environment="FLASK_APP=app"
+Environment="FLASK_ENV=production"
+Environment="FLASK_PORT=5952"
+Environment="PYTHONUNBUFFERED=1"
+
+# Use bash to source .env (if it exists) and run gunicorn
+# This ensures we pick up any secrets or config from .env
+ExecStart=/bin/bash -c 'set -a; [ -f .env ] && source .env; set +a; exec python -m gunicorn "app:create_app()" --bind 0.0.0.0:${FLASK_PORT:-5952} --workers 4 --access-logfile - --error-logfile -'
+
+# Restart configuration
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

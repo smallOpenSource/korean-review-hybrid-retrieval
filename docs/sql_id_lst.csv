@@ -1,0 +1,8 @@
+sequence,python_code_full_path,목적,sql_id,비고
+1,app/core/mysql_client.py,MySQL 연결 상태 확인,healthCheck,헬스체크용 단순 쿼리
+2,app/core/mysql_client.py,테이블에 단일 행 삽입,dynamicInsert_{table},동적 테이블명 사용
+3,app/core/mysql_client.py,테이블 행 업데이트,dynamicUpdate_{table},동적 테이블명 사용
+4,app/core/mysql_client.py,테이블 행 삭제,dynamicDelete_{table},동적 테이블명 사용
+5,app/core/mysql_client.py,테이블 행 수 조회,dynamicCount_{table},동적 테이블명 사용
+6,app/app.py,리뷰ID로 리뷰 조회,getReviewByReviewId,레거시 코드
+7,app/app.py,월별 평균 점수 조회,getMonthlyAvgScore,레거시 코드

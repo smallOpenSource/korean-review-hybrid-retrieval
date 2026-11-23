@@ -1,0 +1,78 @@
+@startuml multi-agent-system
+!theme plain
+title Multi-Agent System - Review Analysis Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam activityBackgroundColor #E6F2FF
+skinparam activityBorderColor #0066CC
+
+|Review Input|
+start
+:Receive Review;
+:Cleanse Content;
+
+|#E6FFE6|Sentiment Agent|
+:Analyze Sentiment;
+note right
+  - 5-level classification
+  - Emotion detection
+  - Confidence scoring
+  - Reasoning storage
+end note
+:Return SentimentResult;
+
+|#FFE6E6|Category Agent|
+:Classify Category;
+note right
+  - Primary category
+  - Secondary categories
+  - Feature/Service/Performance metrics
+  - Related screens
+end note
+:Return CategoryResult;
+
+|#FFF2E6|Complaint Agent|
+if (is_negative?) then (yes)
+  :Classify Complaint Type;
+  :Assign Department;
+  :Calculate Urgency/Severity;
+  :Determine Escalation;
+  note right
+    Departments:
+    - IT_APP
+    - IT_INFRA
+    - IT_SEC
+    - CS_CENTER
+    - BIZ_CARD
+    - BIZ_LOAN
+    - COMPLIANCE
+    - LEGAL
+    - UX_DESIGN
+    - MARKETING
+  end note
+  :Return ComplaintResult;
+else (no)
+  :Mark as non-complaint;
+endif
+
+|#E6E6FF|Embedding Service|
+:Generate Embedding Vector;
+note right
+  Primary: Gemini API
+  Fallback: Local Model
+  Tertiary: BM25 Keywords
+end note
+
+|Storage|
+:Store to OpenSearch;
+note right
+  - Original content
+  - Cleansed content
+  - Embedding vector (768 dims)
+  - Analysis results
+  - LLM reasoning (for prompt improvement)
+end note
+
+stop
+
+@enduml

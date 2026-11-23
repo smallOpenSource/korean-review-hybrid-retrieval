@@ -1,0 +1,124 @@
+
+● 10건 배치
+
+  실행:
+timeout 3000 python -c "
+import asyncio, os, sys, pymysql
+sys.path.insert(0, '.')
+
+# 10건 unanalyzed로 변경
+conn = pymysql.connect(host=os.environ['MYSQL_HOST'], port=int(os.environ.get('MYSQL_PORT', '3306')), user=os.environ['MYSQL_USER'], password=os.environ['MYSQL_PASSWORD'], database='app_reviews_scheduler', charset='utf8mb4')
+cursor = conn.cursor()
+cursor.execute('UPDATE reviews SET analyzed = 0 WHERE analyzed = 1 ORDER BY updated_at DESC LIMIT 10')
+conn.commit()
+print(f'✓ {cursor.rowcount}건 unanalyzed')
+cursor.close()
+conn.close()
+
+# 배치 실행
+from scheduler.jobs.analyze_reviews import AnalyzeReviewsJob
+asyncio.run(AnalyzeReviewsJob().run(all_batches=False))
+" 2>&1 | tee /tmp/batch10.log
+
+  확인 (50분 후):
+  python -c "
+  import os, pymysql
+  conn = pymysql.connect(host=os.environ['MYSQL_HOST'], port=int(os.environ.get('MYSQL_PORT', '3306')), user=os.environ['MYSQL_USER'], password=os.environ['MYSQL_PASSWORD'], database='app_reviews_scheduler', charset='utf8mb4')
+  cursor = conn.cursor(pymysql.cursors.DictCursor)
+  cursor.execute('SELECT review_id, sentiment_emotions FROM reviews WHERE analyzed = 1 ORDER BY updated_at DESC LIMIT 10')
+  rows = cursor.fetchall()
+  cursor.close()
+  conn.close()
+
+  korean = 0
+  for r in rows:
+      emotions = [e.strip() for e in (r['sentiment_emotions'] or '').split(',') if e.strip()]
+      has_korean = any('가' <= c <= '힣' for e in emotions for c in e)
+      if has_korean:
+          korean += 1
+          print(f'✅ {r[\"review_id\"][:8]}: {emotions}')
+      else:
+          print(f'⚠️  {r[\"review_id\"][:8]}: {emotions}')
+  print(f'\n한글 감정: {korean}/10')
+  "
+
+  ---
+  전체 배치 (10건 성공 후)
+
+  백그라운드 실행:
+  nohup timeout 36000 python -c "
+  import asyncio, sys
+  sys.path.insert(0, '.')
+  from scheduler.jobs.analyze_reviews import AnalyzeReviewsJob
+  asyncio.run(AnalyzeReviewsJob().run(all_batches=True))
+  " > /tmp/batch_full.log 2>&1 &
+
+  echo $! > /tmp/batch_full.pid
+  echo "PID: $(cat /tmp/batch_full.pid)"
+
+  진행 상황 확인:
+  # 로그 확인
+  tail -50 /tmp/batch_full.log
+
+  # DB 통계
+  python -c "
+  import os, pymysql
+  conn = pymysql.connect(host=os.environ['MYSQL_HOST'], port=int(os.environ.get('MYSQL_PORT', '3306')), user=os.environ['MYSQL_USER'], password=os.environ['MYSQL_PASSWORD'], database='app_reviews_scheduler', charset='utf8mb4')
+  cursor = conn.cursor()
+  cursor.execute('SELECT COUNT(*) as total, SUM(analyzed) as analyzed FROM reviews')
+  row = cursor.fetchone()
+  cursor.close()
+  conn.close()
+  print(f'진행: {row[1]}/{row[0]} ({row[1]/row[0]*100:.1f}%)')
+  "
+
+  # 프로세스 확인
+  ps aux | grep AnalyzeReviewsJob | grep -v grep
+
+
+
+
+
+
+
+
+
+
+
+
+  ● 10건 배치 정상 여부 확인
+
+  명령어:
+  python -c "
+  import os, pymysql
+  conn = pymysql.connect(host=os.environ['MYSQL_HOST'], port=int(os.environ.get('MYSQL_PORT', '3306')), user=os.environ['MYSQL_USER'], password=os.environ['MYSQL_PASSWORD'], database='app_reviews_scheduler', charset='utf8mb4')
+  cursor = conn.cursor(pymysql.cursors.DictCursor)
+  cursor.execute('SELECT review_id, sentiment_emotions FROM reviews WHERE analyzed = 1 ORDER BY updated_at DESC LIMIT 10')
+  rows = cursor.fetchall()
+  cursor.close()
+  conn.close()
+
+  korean = 0
+  for r in rows:
+      emotions = [e.strip() for e in (r['sentiment_emotions'] or '').split(',') if e.strip()]
+      has_korean = any('가' <= c <= '힣' for e in emotions for c in e)
+      if has_korean:
+          korean += 1
+          print(f'✅ {r[\"review_id\"][:8]}: {emotions}')
+      else:
+          print(f'⚠️  {r[\"review_id\"][:8]}: {emotions}')
+  print(f'\n한글 감정: {korean}/10 reviews')
+  print('✅ 정상' if korean >= 5 else '❌ 실패')
+  "
+
+  판단 기준:
+  - ✅ 정상: 한글 감정 5건 이상 (≥50%)
+  - ❌ 실패: 한글 감정 5건 미만 (<50%)
+
+  예상 결과 (정상):
+  ✅ 42e86e33: ['분노', '불편']
+  ✅ f11bf79f: ['짜증', '실망']
+  ✅ 54436352: ['화남', '불만']
+  ...
+  한글 감정: 8/10 reviews
+  ✅ 정상

@@ -1,0 +1,106 @@
+@startuml class-diagram
+!theme plain
+title Class Diagram - Agent System
+
+skinparam backgroundColor #FFFFFF
+skinparam classAttributeIconSize 0
+
+abstract class BaseAgent {
+    - _llm: GeminiClient
+    - _prompts: PromptTemplates
+    + AGENT_TYPE: str
+    + TASK_TYPE: str
+    + CONFIDENCE_THRESHOLD: float
+    --
+    + analyze(input_data: Dict): AgentResult
+    + analyze_batch(items: List): List[AgentResult]
+    # _prepare_prompt_variables(input_data): Dict
+    # _parse_result(parsed_json): Any
+    # _extract_confidence(parsed_json): float
+    # _should_flag_for_review(): bool
+}
+
+class SentimentAgent {
+    + AGENT_TYPE = "sentiment"
+    + CONFIDENCE_THRESHOLD = 0.7
+    --
+    + analyze(): AgentResult[SentimentResult]
+}
+
+class CategoryAgent {
+    + AGENT_TYPE = "category"
+    + CATEGORIES: List[str]
+    --
+    + analyze(): AgentResult[CategoryResult]
+}
+
+class ComplaintAgent {
+    - _department_codes: Dict
+    + AGENT_TYPE = "complaint"
+    + CONFIDENCE_THRESHOLD = 0.75
+    --
+    + analyze(): AgentResult[ComplaintResult]
+    + get_sla_deadline_hours(): int
+}
+
+class InsightAgent {
+    + AGENT_TYPE = "insight"
+    --
+    + analyze(): AgentResult[InsightResult]
+}
+
+class AgentResult<T> {
+    + analysis_id: str
+    + agent_type: str
+    + timestamp: datetime
+    + result: T
+    + model_used: str
+    + is_secondary_model: bool
+    + reasoning: Reasoning
+    + confidence: float
+    + needs_review: bool
+    --
+    + to_storage_dict(): Dict
+}
+
+class Reasoning {
+    + summary: str
+    + steps: List[ReasoningStep]
+    + key_factors: List[str]
+    + evidence_quotes: List[str]
+    + confidence_factors: Dict
+    --
+    + from_dict(data): Reasoning
+    + to_dict(): Dict
+}
+
+class GeminiClient {
+    - _api_key: str
+    - _rate_limiter: RateLimiter
+    --
+    + generate(prompt, task_type): LLMResponse
+    + generate_with_retry(): LLMResponse
+    + embed(texts): List[EmbeddingResponse]
+}
+
+class EmbeddingService {
+    - _gemini: GeminiClient
+    - _local_model: Optional
+    --
+    + embed(text): EmbeddingResult
+    + embed_batch(texts): List[EmbeddingResult]
+    + search_similar(query, k): List
+}
+
+BaseAgent <|-- SentimentAgent
+BaseAgent <|-- CategoryAgent
+BaseAgent <|-- ComplaintAgent
+BaseAgent <|-- InsightAgent
+
+BaseAgent --> GeminiClient
+BaseAgent --> AgentResult
+AgentResult --> Reasoning
+
+EmbeddingService --> GeminiClient
+
+@enduml

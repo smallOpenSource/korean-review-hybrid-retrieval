@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="앱 리뷰 분석 시스템">
+    <title>{% block title %}앱리뷰 분석{% endblock %} - HI</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180"
+        href="{{ url_for('static', filename='favicon_io/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32"
+        href="{{ url_for('static', filename='favicon_io/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16"
+        href="{{ url_for('static', filename='favicon_io/favicon-16x16.png') }}">
+
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Trust Blue palette (Option A)
+                        primary: {
+                            DEFAULT: '#0066CC',
+                            dark: '#004D99',
+                            light: '#E6F2FF',
+                        },
+                        secondary: '#64748B',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        neutral: '#F1F5F9',
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+    <!-- Heroicons -->
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js"></script>
+
+    {% block head %}{% endblock %}
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="bg-neutral font-sans text-gray-800" x-data="{ sidebarOpen: true }">
+    <!-- Top Navigation -->
+    {% include 'components/_navbar.html' %}
+
+    <div class="flex">
+        <!-- Sidebar -->
+        {% include 'components/_sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="flex-1 min-h-screen transition-all duration-300" :class="sidebarOpen ? 'ml-64' : 'ml-16'">
+            <div class="p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4 transition-all duration-300"
+        :class="sidebarOpen ? 'ml-64' : 'ml-16'">
+        <div class="px-6 flex items-center justify-between text-sm text-gray-500">
+            <div>Copyright &copy; 2025 App Reviews Analysis System</div>
+            <div>
+                <a href="#" class="hover:text-primary">Privacy Policy</a>
+                <span class="mx-2">&middot;</span>
+                <a href="#" class="hover:text-primary">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const yearFilter = document.getElementById('global-year-filter');
+            const categoryFilter = document.getElementById('global-category-filter');
+
+            // Set initial values
+            if (yearFilter) {
+                yearFilter.value = urlParams.get('year') || '';
+                yearFilter.addEventListener('change', function () {
+                    updateGlobalFilter('year', this.value);
+                });
+            }
+            if (categoryFilter) {
+                categoryFilter.value = urlParams.get('category') || '0';
+                categoryFilter.addEventListener('change', function () {
+                    updateGlobalFilter('category', this.value);
+                });
+            }
+
+            function updateGlobalFilter(key, value) {
+                const currentUrl = new URL(window.location.href);
+                if (value && value !== '0') {
+                    currentUrl.searchParams.set(key, value);
+                } else {
+                    currentUrl.searchParams.delete(key);
+                }
+                // Reset pagination if exists
+                currentUrl.searchParams.delete('page');
+                window.location.href = currentUrl.toString();
+            }
+        });
+    </script>
+</body>
+
+</html>

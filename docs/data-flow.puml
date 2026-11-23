@@ -1,0 +1,68 @@
+@startuml data-flow
+!theme plain
+title Data Flow - Review Processing Pipeline
+
+skinparam backgroundColor #FFFFFF
+
+actor "User" as User
+participant "Play Store" as PlayStore
+participant "Collector" as Collector
+participant "Cleanser" as Cleanser
+database "MySQL" as MySQL
+participant "Analyzer" as Analyzer
+participant "Gemini API" as Gemini
+database "OpenSearch" as OpenSearch
+database "Redis" as Redis
+participant "Web App" as WebApp
+
+== Data Collection (Batch) ==
+
+Collector -> PlayStore: Fetch reviews
+PlayStore --> Collector: Raw reviews
+Collector -> Cleanser: Raw reviews
+Cleanser -> Cleanser: Remove profanity
+Cleanser -> Cleanser: Fix typos
+Cleanser -> Cleanser: Remove emojis
+Cleanser -> MySQL: Store raw + cleansed
+
+== Analysis Pipeline ==
+
+MySQL -> Analyzer: Get unprocessed reviews
+loop For each review
+    Analyzer -> Gemini: Sentiment analysis
+    Gemini --> Analyzer: Sentiment + Reasoning
+
+    Analyzer -> Gemini: Category classification
+    Gemini --> Analyzer: Categories + Metrics
+
+    alt Negative sentiment
+        Analyzer -> Gemini: Complaint classification
+        Gemini --> Analyzer: Complaint + Department
+    end
+
+    Analyzer -> Gemini: Generate embedding
+    Gemini --> Analyzer: Vector (768 dims)
+
+    Analyzer -> OpenSearch: Index document
+end
+
+== User Query ==
+
+User -> WebApp: Search similar reviews
+WebApp -> OpenSearch: KNN search
+OpenSearch --> WebApp: Similar reviews
+WebApp -> Redis: Cache result
+WebApp --> User: Display results
+
+User -> WebApp: View dashboard
+WebApp -> Redis: Check cache
+alt Cache hit
+    Redis --> WebApp: Cached data
+else Cache miss
+    WebApp -> OpenSearch: Aggregation query
+    OpenSearch --> WebApp: Statistics
+    WebApp -> Redis: Store cache
+end
+WebApp --> User: Display dashboard
+
+@enduml

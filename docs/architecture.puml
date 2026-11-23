@@ -1,0 +1,95 @@
+@startuml architecture
+!theme plain
+title App Reviews Analysis System - Architecture
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+
+' External Systems
+cloud "External" {
+    [Google Play Store] as PlayStore
+    [Gemini LLM API] as GeminiAPI
+}
+
+' Presentation Layer
+package "Presentation Layer" {
+    [Web Browser] as Browser
+    [Flask Views] as Views
+    [Jinja2 Templates] as Templates
+    [Static Assets\n(Tailwind, Alpine.js, ECharts)] as Static
+}
+
+' API Layer
+package "API Layer" {
+    [REST API\n/api/v1/*] as API
+    [Rate Limiter] as RateLimiter
+}
+
+' Application Layer
+package "Application Layer" {
+    package "Multi-Agent System" {
+        [Sentiment Agent] as SentimentAgent
+        [Category Agent] as CategoryAgent
+        [Complaint Agent] as ComplaintAgent
+        [Insight Agent] as InsightAgent
+    }
+
+    package "Services" {
+        [Review Service] as ReviewService
+        [Dedup Service] as DedupService
+        [Word Analysis Service] as WordService
+        [Similar Review Service] as SimilarService
+    }
+
+    [Embedding Service] as EmbeddingService
+    [LLM Client] as LLMClient
+}
+
+' Infrastructure Layer
+package "Infrastructure Layer" {
+    database "OpenSearch\n(Vector + Text)" as OpenSearch
+    database "Redis Sentinel\n(Cache + Rate Limit)" as Redis
+    database "MySQL\n(Master Data)" as MySQL
+}
+
+' Data Pipeline (Batch)
+package "Data Pipeline" {
+    [Review Collector] as Collector
+    [Data Cleanser] as Cleanser
+}
+
+' Connections
+Browser --> Views
+Views --> Templates
+Views --> Static
+Browser --> API
+
+API --> RateLimiter
+RateLimiter --> ReviewService
+RateLimiter --> WordService
+RateLimiter --> SimilarService
+
+ReviewService --> OpenSearch
+ReviewService --> EmbeddingService
+DedupService --> OpenSearch
+DedupService --> Redis
+WordService --> OpenSearch
+WordService --> Redis
+SimilarService --> OpenSearch
+SimilarService --> EmbeddingService
+
+SentimentAgent --> LLMClient
+CategoryAgent --> LLMClient
+ComplaintAgent --> LLMClient
+InsightAgent --> LLMClient
+EmbeddingService --> LLMClient
+
+LLMClient --> GeminiAPI
+LLMClient --> RateLimiter
+
+Collector --> PlayStore
+Collector --> Cleanser
+Cleanser --> MySQL
+Cleanser --> OpenSearch
+
+@enduml

@@ -1,0 +1,251 @@
+# =============================================================================
+# LLM Models Configuration
+# =============================================================================
+# This file defines model specifications, rate limits, and task mappings.
+# Secondary models are used only when primary models hit rate limits.
+# =============================================================================
+
+models:
+  # ---------------------------------------------------------------------------
+  # Gemini 2.5 Flash-Lite - Lightweight, high-speed model for real-time tasks
+  # ---------------------------------------------------------------------------
+  gemini-2.5-flash-lite:
+    context_window: 1000000
+    rate_limits:
+      rpm: 1000         # Requests per minute (higher for lite)
+      rpd: 50000        # Requests per day (higher for lite)
+      tpm: 4000000      # Tokens per minute
+      concurrent: 10
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 4096
+      top_p: 0.95
+    secondary_model: gemini-2.0-flash
+
+  # ---------------------------------------------------------------------------
+  # Gemini 2.5 Flash - Latest model for complex agent tasks
+  # ---------------------------------------------------------------------------
+  gemini-2.5-flash:
+    context_window: 1000000
+    rate_limits:
+      rpm: 10           # Requests per minute (free tier)
+      rpd: 500          # Requests per day (free tier)
+      tpm: 250000       # Tokens per minute
+      concurrent: 3
+    default_params:
+      temperature: 0.2
+      max_output_tokens: 2048
+      top_p: 0.95
+    secondary_model: gemini-2.0-flash
+
+  # ---------------------------------------------------------------------------
+  # Gemini 2.0 Flash - Cost-effective real-time processing
+  # ---------------------------------------------------------------------------
+  gemini-2.0-flash:
+    context_window: 1000000
+    rate_limits:
+      rpm: 15
+      rpd: 1500
+      tpm: 1000000
+      concurrent: 5
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 1024
+      top_p: 0.95
+    secondary_model: gemini-1.5-flash
+
+  # ---------------------------------------------------------------------------
+  # Gemini 1.5 Pro - Complex reasoning and insights
+  # ---------------------------------------------------------------------------
+  gemini-1.5-pro:
+    context_window: 1000000
+    rate_limits:
+      rpm: 2
+      rpd: 50
+      tpm: 32000
+      concurrent: 2
+    default_params:
+      temperature: 0.3
+      max_output_tokens: 4096
+      top_p: 0.95
+    secondary_model: gemini-2.0-flash
+
+  # ---------------------------------------------------------------------------
+  # Gemini 1.5 Flash - Fast and lightweight
+  # ---------------------------------------------------------------------------
+  gemini-1.5-flash:
+    context_window: 1000000
+    rate_limits:
+      rpm: 15
+      rpd: 1500
+      tpm: 1000000
+      concurrent: 5
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 1024
+      top_p: 0.95
+    secondary_model: null
+
+  # ---------------------------------------------------------------------------
+  # Gemini 2.0 Flash Exp - Experimental model for testing
+  # ---------------------------------------------------------------------------
+  gemini-2.0-flash-exp:
+    context_window: 1000000
+    rate_limits:
+      rpm: 10
+      rpd: 1500
+      tpm: 1000000
+      concurrent: 5
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 4096
+      top_p: 0.95
+    secondary_model: gemini-2.0-flash
+
+  # ---------------------------------------------------------------------------
+  # Qwen 3 8B - Ollama hosted model
+  # ---------------------------------------------------------------------------
+  qwen/qwen3-8b:
+    context_window: 32000
+    rate_limits:
+      rpm: 60
+      rpd: 10000
+      tpm: 100000
+      concurrent: 5
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 4096
+      top_p: 0.95
+    secondary_model: gemini-2.0-flash
+
+  # ---------------------------------------------------------------------------
+  # Groq Llama 4 Maverick 17B - PRIMARY real-time analysis model (5-key rotation)
+  # ---------------------------------------------------------------------------
+  meta-llama/llama-4-maverick-17b-128e-instruct:
+    context_window: 128000
+    rate_limits:
+      rpm: 30           # 30 requests/min per key (150 total with 5 keys)
+      rpd: 1000         # 1000 requests/day per key (5000 total with 5 keys)
+      tpm: 15000        # Tokens per minute
+      concurrent: 3
+    default_params:
+      temperature: 0.1
+      max_output_tokens: 4096
+      top_p: 0.95
+    secondary_model: null
+
+  # ---------------------------------------------------------------------------
+  # Gemini Embedding - Vector embeddings
+  # ---------------------------------------------------------------------------
+  gemini-embedding-001:
+    context_window: 2048
+    is_embedding: true
+    dimensions: 1024
+    rate_limits:
+      rpm: 1500
+      rpd: 100000
+      tpm: 0
+      concurrent: 50
+    default_params: {}
+    secondary_model: null
+
+# =============================================================================
+# Task to Model Mappings
+# =============================================================================
+# Each task type maps to a primary model and a secondary model.
+# Secondary is used only when primary hits rate limits.
+# =============================================================================
+
+task_mappings:
+  # Real-time analysis tasks (sentiment, category, complaint classification)
+  # Using Groq Llama 4 Maverick as PRIMARY (5-key rotation = 150 RPM capacity)
+  sentiment_analysis:
+    primary_model: meta-llama/llama-4-maverick-17b-128e-instruct
+    secondary_model: gemini-2.0-flash
+    temperature: 0.1
+    max_output_tokens: 4096
+
+  category_classification:
+    primary_model: meta-llama/llama-4-maverick-17b-128e-instruct
+    secondary_model: gemini-2.0-flash
+    temperature: 0.1
+    max_output_tokens: 4096
+
+  complaint_classification:
+    primary_model: meta-llama/llama-4-maverick-17b-128e-instruct
+    secondary_model: gemini-2.0-flash
+    temperature: 0.1
+    max_output_tokens: 4096
+
+  department_assignment:
+    primary_model: meta-llama/llama-4-maverick-17b-128e-instruct
+    secondary_model: gemini-2.0-flash
+    temperature: 0.1
+    max_output_tokens: 4096
+
+  unified_analysis:
+    primary_model: meta-llama/llama-4-maverick-17b-128e-instruct
+    secondary_model: gemini-2.0-flash
+    temperature: 0.1
+    max_output_tokens: 4096
+
+  # Complex analysis tasks
+  insight_generation:
+    primary_model: gemini-1.5-pro
+    secondary_model: gemini-2.0-flash
+    temperature: 0.3
+    max_output_tokens: 4096
+
+  trend_analysis:
+    primary_model: gemini-1.5-pro
+    secondary_model: gemini-2.0-flash
+    temperature: 0.2
+    max_output_tokens: 2048
+
+  # Query and search tasks
+  natural_language_query:
+    primary_model: gemini-2.0-flash
+    secondary_model: gemini-2.0-flash
+    temperature: 0.2
+    max_output_tokens: 2048
+
+  review_summarization:
+    primary_model: gemini-2.0-flash
+    secondary_model: gemini-1.5-flash
+    temperature: 0.2
+    max_output_tokens: 1024
+
+  # Embedding task
+  text_embedding:
+    primary_model: gemini-embedding-001
+    secondary_model: null
+    temperature: 0
+    max_output_tokens: 0
+
+# =============================================================================
+# Embedding Configuration
+# =============================================================================
+
+embedding:
+  dimensions: 1024
+  task_types:
+    document: RETRIEVAL_DOCUMENT
+    query: RETRIEVAL_QUERY
+    semantic_similarity: SEMANTIC_SIMILARITY
+    classification: CLASSIFICATION
+
+# =============================================================================
+# Retry Configuration
+# =============================================================================
+
+retry:
+  max_attempts: 3
+  initial_delay_seconds: 1.0
+  backoff_multiplier: 2.0
+  max_delay_seconds: 16.0
+  retryable_status_codes:
+    - 429
+    - 500
+    - 502
+    - 503
+    - 504

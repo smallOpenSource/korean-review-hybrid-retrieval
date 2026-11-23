@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets and local configuration (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+
+# Editors / agent local settings
+.idea/
+.vscode/
+.claude/
+.agent/
+.omc/
+*.swp
+.DS_Store
+
+# Runtime output
+/logs/
+*.log
+nohup.out
+/models/
+/app/static/wc/*.png
+/app/static/icon_company/
+/app/static/images/logos/
+
+# Real data must not be committed (use samples/ for fictional data)
+/data/
+*.sql.gz
+*.dump
+*.parquet
+*.xlsx

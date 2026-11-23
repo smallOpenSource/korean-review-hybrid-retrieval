@@ -1,0 +1,612 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+                {{ title }}
+
+                <span id="data-source-badge" class="ml-2 px-2 py-1 text-xs font-semibold rounded-full hidden"></span>
+            </h1>
+            <p class="text-gray-500 mt-1">{{ category_summary |default('데이터 로딩 중...') }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Global filters are now in the navbar -->
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Reviews -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">총 리뷰 수</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" data-kpi="total-reviews">{{
+                        "{:,}".format(total_reviews) }}</p>
+                    <p class="text-sm {{ 'text-success' if reviews_change >= 0 else 'text-danger' }} mt-1">
+                        {{ "+" if reviews_change >= 0 else "" }}{{ "%.1f"|format(reviews_change) }}%
+                        <span class="text-gray-400">vs {{ "전년" if year_filter else "전월" }}</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Rating -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">평균 평점</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" data-kpi="avg-rating">{{
+                        "%.1f"|format(average_rating) }}</p>
+                    <p class="text-sm {{ 'text-success' if rating_change >= 0 else 'text-danger' }} mt-1">
+                        {{ "+" if rating_change >= 0 else "" }}{{ "%.1f"|format(rating_change) }}
+                        <span class="text-gray-400">vs {{ "전년" if year_filter else "전월" }}</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-warning" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaint Rate -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">민원 비율</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" data-kpi="complaint-rate">{{
+                        "%.1f"|format(complaint_rate) }}%</p>
+                    <p class="text-sm {{ 'text-danger' if complaint_rate_change > 0 else 'text-success' }} mt-1">
+                        {{ "+" if complaint_rate_change >= 0 else "" }}{{ "%.1f"|format(complaint_rate_change) }}%
+                        <span class="text-gray-400">vs {{ "전년" if year_filter else "전월" }}</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-danger/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positive Rate -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">긍정 비율</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1" data-kpi="positive-rate">{{
+                        "%.1f"|format(positive_rate) }}%</p>
+                    <p class="text-sm {{ 'text-success' if pos_rate_change >= 0 else 'text-danger' }} mt-1">
+                        {{ "+" if pos_rate_change >= 0 else "" }}{{ "%.1f"|format(pos_rate_change) }}%
+                        <span class="text-gray-400">vs {{ "전년" if year_filter else "전월" }}</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 gap-6 mb-6">
+        <!-- Line Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">평점 추이</h3>
+            <div id="lineChart" style="height: 300px;"></div>
+        </div>
+
+        <!-- Sentiment Timeline Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">감정 분포 추이</h3>
+            <div id="sentimentChart" style="height: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Rankings Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top 5 Apps -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <span class="text-success mr-2">▲</span>좋아요 APP 순위
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">순위</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">회사</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">그룹</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">점수</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">리뷰 수</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for app in top_apps %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ loop.index }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-primary">{{ app.name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ app.group }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800">{{ "%.1f"|format(app.score) }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ "{:,}".format(app.reviews) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr class="hover:bg-gray-50">
+                            <td colspan="5" class="px-6 py-4 text-sm text-gray-500 text-center">데이터가 없습니다.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bottom 5 Apps -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <span class="text-danger mr-2">▼</span>별로에요 APP 순위
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">순위</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">회사</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">그룹</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">점수</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">리뷰 수</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for app in bottom_apps %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ loop.index }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-primary">{{ app.name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ app.group }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-800">{{ "%.1f"|format(app.score) }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ "{:,}".format(app.reviews) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr class="hover:bg-gray-50">
+                            <td colspan="5" class="px-6 py-4 text-sm text-gray-500 text-center">데이터가 없습니다.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Wait for DOM to be fully loaded before initializing charts
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Charts
+        const lineChart = echarts.init(document.getElementById('lineChart'));
+        const sentimentChart = echarts.init(document.getElementById('sentimentChart'));
+
+        // Mock Data Generator REMOVED
+
+        // Fetch Dashboard Data
+        async function fetchDashboardData(days = 30, category = null, year = null) {
+            try {
+                let url = `/api/v1/dashboard/summary?days=${days}`;
+                if (category && category !== '0') {
+                    url += `&category=${category}`;
+                }
+                if (year) {
+                    url += `&year=${year}`;
+                }
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.status === 'ok' && result.sentiment) {
+                    // Update Data Source Badge
+                    const badge = document.getElementById('data-source-badge');
+                    if (result.sentiment.meta && result.sentiment.meta.source) {
+                        const source = result.sentiment.meta.source;
+                        badge.className = 'ml-2 px-2 py-1 text-xs font-semibold rounded-full'; // Reset classes
+
+                        if (source === 'mart') {
+                            badge.textContent = 'Optimized (Mart)';
+                            badge.classList.add('bg-green-100', 'text-green-800');
+                        } else if (source === 'raw') {
+                            badge.textContent = 'Real-time (Raw)';
+                            badge.classList.add('bg-blue-100', 'text-blue-800');
+                        } else {
+                            badge.textContent = 'Fallback';
+                            badge.classList.add('bg-red-100', 'text-red-800');
+                        }
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+
+                    updateDashboard(result);
+                } else {
+                    console.warn('API returned empty data:', result.message);
+                    // updateDashboard(getMockData()); // REMOVED: No mocking allowed
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                // updateDashboard(getMockData()); // REMOVED: No mocking allowed
+            }
+        }
+
+        function getDaysForFilter() {
+            // Return days based on current year filter
+            // If year is selected, use 30 days (within that year)
+            // If "All Time", use 3650 days (10 years)
+            return currentYear ? 30 : 3650;
+        }
+
+        function updateKPIs(data) {
+            // Update KPI cards with new data
+            const sentiment = data.sentiment || {};
+            const complaints = data.complaints || {};
+
+            // Update complaint rate if element exists
+            const complaintRateEl = document.querySelector('[data-kpi="complaint-rate"]');
+            if (complaintRateEl && complaints.complaint_rate !== undefined) {
+                complaintRateEl.textContent = complaints.complaint_rate.toFixed(1) + '%';
+            }
+
+            // Update total reviews
+            const totalReviewsEl = document.querySelector('[data-kpi="total-reviews"]');
+            if (totalReviewsEl && sentiment.total_reviews !== undefined) {
+                totalReviewsEl.textContent = sentiment.total_reviews.toLocaleString();
+            }
+
+            // Update average rating
+            const avgRatingEl = document.querySelector('[data-kpi="avg-rating"]');
+            if (avgRatingEl && sentiment.average_rating !== undefined) {
+                avgRatingEl.textContent = sentiment.average_rating.toFixed(1);
+            }
+
+            // Update positive rate
+            const positiveRateEl = document.querySelector('[data-kpi="positive-rate"]');
+            if (positiveRateEl && sentiment.positive_rate !== undefined) {
+                positiveRateEl.textContent = sentiment.positive_rate.toFixed(1) + '%';
+            }
+        }
+
+        function updateDashboard(data) {
+            updateKPIs(data);    // Update KPI cards first
+            updateCharts(data);  // Then update charts
+        }
+
+        function updateCharts(data) {
+            const sentiment = data.sentiment;
+
+            // Multi-line chart: check if we have series data
+            if (sentiment && sentiment.series && sentiment.series.length > 0) {
+                // Multi-line chart with series array
+                const dates = sentiment.dates.map(d => {
+                    const dateStr = d.split('T')[0];
+                    const parts = dateStr.split('-');
+                    const year = parts[0];
+                    const month = parts[1];
+                    const day = parts[2];
+
+                    // Check if this is yearly data (multiple years)
+                    let isYearlyData = false;
+                    if (sentiment.dates.length > 0) {
+                        const firstYear = sentiment.dates[0].split('-')[0];
+                        const lastYear = sentiment.dates[sentiment.dates.length - 1].split('-')[0];
+                        isYearlyData = firstYear !== lastYear;
+                    }
+
+                    // If yearly data (All Time), show year
+                    if (isYearlyData && day === '01' && month === '01') {
+                        return year + '년';
+                    }
+
+                    // If monthly data (within same year), show month
+                    if (!isYearlyData && day === '01') {
+                        return parseInt(month) + '월';
+                    }
+
+                    // Fallback
+                    return dateStr;
+                });
+                const categoryMap = {
+                    'banks': '은행',
+                    'cards': '카드',
+                    'fintech': '핀테크',
+                    'securities': '증권'
+                };
+
+                const series = sentiment.series.map(item => ({
+                    name: categoryMap[item.name] || item.name || item.category, // Ensure name is mapped
+                    type: 'line',
+                    data: item.data,
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6
+                }));
+                const lineOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            let result = params[0].axisValueLabel + '<br/>';
+                            params.forEach(param => {
+                                const val = param.value ? param.value.toFixed(1) : '0.0';
+                                result += param.marker + param.seriesName + ': ' + val + '<br/>';
+                            });
+                            return result;
+                        }
+                    },
+                    legend: {
+                        data: series.map(s => s.name), // Use mapped names
+                        bottom: 0
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        top: '10%',
+                        bottom: '18%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        boundaryGap: true
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 5,
+                        name: '평점'
+                    },
+                    series: series
+                };
+                lineChart.setOption(lineOption);
+                lineChart.resize();  // Force resize after initial render
+
+            } else if (sentiment && sentiment.raw_aggs && sentiment.raw_aggs.sentiment_over_time) {
+                // Single-line fallback using raw_aggs
+                const buckets = sentiment.raw_aggs.sentiment_over_time.buckets || [];
+                const dates = buckets.map(b => {
+                    const key = b.key_as_string || b.key;
+                    const dateStr = key.split('T')[0];
+                    const parts = dateStr.split('-');
+                    const year = parts[0];
+                    const month = parts[1];
+                    const day = parts[2];
+
+                    // Check if yearly data first (YYYY-01-01 format for years)
+                    if (month === '01' && day === '01') {
+                        return year + '년';
+                    }
+                    // Monthly data: check if day is 01 and we have <= 12 buckets
+                    if (buckets.length <= 12 && day === '01') {
+                        return parseInt(month) + '월';
+                    }
+                    return dateStr;
+                });
+                const scores = buckets.map(b => b.avg_score?.value || 0);
+
+                const lineOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            const val = params[0].value ? params[0].value.toFixed(1) : '0.0';
+                            return params[0].axisValueLabel + '<br/>' +
+                                params[0].marker + params[0].seriesName + ': ' + val;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        boundaryGap: true
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 5,
+                        name: '평점'
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        top: '10%',
+                        bottom: '18%',
+                        containLabel: true
+                    },
+                    series: [{
+                        name: '평균 평점',
+                        type: 'line',
+                        data: scores,
+                        smooth: true,
+                        itemStyle: { color: '#0066CC' }
+                    }]
+                };
+                lineChart.setOption(lineOption);
+                lineChart.resize();  // Force resize after initial render
+            }
+
+            // Sentiment Timeline Chart: Sentiment Distribution Over Time
+            if (sentiment && sentiment.sentiment_trend && sentiment.sentiment_trend.length > 0) {
+                const buckets = sentiment.sentiment_trend || [];
+
+                // Extract dates
+                const dates = buckets.map(b => {
+                    // Convert timestamp to Date object
+                    const date = new Date(b.key);
+                    const year = date.getFullYear();
+                    const month = date.getMonth() + 1; // 0-indexed
+
+                    // Check if this is yearly data (multiple years)
+                    const firstDate = new Date(buckets[0].key);
+                    const lastDate = new Date(buckets[buckets.length - 1].key);
+                    const firstYear = firstDate.getFullYear();
+                    const lastYear = lastDate.getFullYear();
+                    const isYearlyData = firstYear !== lastYear;
+
+                    // If yearly data (All Time), show year
+                    if (isYearlyData && month === 1) {
+                        return year + '년';
+                    }
+
+                    // If monthly data (within same year), show month
+                    if (!isYearlyData) {
+                        return month + '월';
+                    }
+
+                    // Fallback
+                    return year + '-' + String(month).padStart(2, '0');
+                });
+
+                // Define sentiment labels and colors
+                const sentimentLabels = {
+                    'very_positive': '매우 긍정',
+                    'positive': '긍정',
+                    'neutral': '중립',
+                    'negative': '부정',
+                    'very_negative': '매우 부정'
+                };
+
+                const sentimentColors = {
+                    'very_positive': '#059669',
+                    'positive': '#10B981',
+                    'neutral': '#64748B',
+                    'negative': '#EF4444',
+                    'very_negative': '#B91C1C'
+                };
+
+                // Initialize series data structure
+                const seriesData = {};
+                Object.keys(sentimentLabels).forEach(key => {
+                    seriesData[key] = new Array(buckets.length).fill(0);
+                });
+
+                // Fill data from buckets
+                buckets.forEach((bucket, idx) => {
+                    if (bucket.sentiment_breakdown && bucket.sentiment_breakdown.buckets) {
+                        bucket.sentiment_breakdown.buckets.forEach(sb => {
+                            const key = sb.key.toLowerCase();
+                            if (seriesData[key] !== undefined) {
+                                seriesData[key][idx] = sb.doc_count;
+                            }
+                        });
+                    }
+                });
+
+                // Build ECharts series
+                const series = Object.entries(sentimentLabels).map(([key, label]) => ({
+                    name: label,
+                    type: 'line',
+                    stack: 'total',
+                    areaStyle: {},
+                    emphasis: { focus: 'series' },
+                    data: seriesData[key],
+                    itemStyle: { color: sentimentColors[key] }
+                }));
+
+                // Set chart option
+                const sentimentOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'cross' }
+                    },
+                    legend: {
+                        data: Object.values(sentimentLabels),
+                        bottom: 0
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        top: '10%',
+                        bottom: '18%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        boundaryGap: false
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '리뷰 수'
+                    },
+                    series: series
+                };
+
+                sentimentChart.setOption(sentimentOption);
+            }
+        }
+
+        // State management for filters
+        let currentCategory = '0';
+        let currentYear = ''; // Default to All Time
+
+        // Set current values from selects and add event listeners
+        const yearSelect = document.getElementById('input_year');
+        const categorySelect = document.getElementById('chart_type');
+
+        if (yearSelect) {
+            currentYear = yearSelect.value;
+            yearSelect.addEventListener('change', (e) => {
+                currentYear = e.target.value;
+                console.log(`Year changed to: ${currentYear}`);
+                fetchDashboardData(getDaysForFilter(), currentCategory, currentYear);
+            });
+        }
+
+        if (categorySelect) {
+            currentCategory = categorySelect.value;
+            categorySelect.addEventListener('change', (e) => {
+                currentCategory = e.target.value;
+                console.log(`Category changed to: ${currentCategory}`);
+                fetchDashboardData(getDaysForFilter(), currentCategory, currentYear);
+            });
+        }
+
+        // Check URL params for global filters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('year')) currentYear = urlParams.get('year');
+        if (urlParams.has('category')) currentCategory = urlParams.get('category');
+
+        // Initial load
+        fetchDashboardData(getDaysForFilter(), currentCategory, currentYear);
+
+        // Resize handler
+        window.addEventListener('resize', function () {
+            lineChart.resize();
+            sentimentChart.resize();
+        });
+
+        // Force resize after page is fully loaded to ensure correct width
+        window.addEventListener('load', function () {
+            setTimeout(() => {
+                lineChart.resize();
+                sentimentChart.resize();
+            }, 100); // Small delay to ensure layout is stabilized
+        });
+    });
+</script>
+{% endblock %}

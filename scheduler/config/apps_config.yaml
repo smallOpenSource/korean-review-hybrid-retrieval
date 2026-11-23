@@ -1,0 +1,551 @@
+# Fictional app catalogue (pseudonymized sample)
+# All company names and package ids below are FICTIONAL placeholders (com.example.*).
+# Replace them with the Google Play package ids of the apps you want to monitor.
+
+version: "1.0.0"
+last_updated: "2024-01-01"
+
+# Default settings for all apps
+defaults:
+  review_fetch_count: 200
+  review_languages:
+    - ko
+    - en
+  min_rating: 1
+  max_rating: 5
+  fetch_interval_hours: 6
+
+# App categories
+categories:
+  # ============================================================
+  # 은행 (Banks)
+  # ============================================================
+  banks:
+    display_name: "은행"
+    description: "시중은행 및 인터넷전문은행 앱"
+    apps:
+      # 시중은행
+      - package_id: "com.example.bank_a"
+        name: "A은행"
+        company: "A은행"
+        type: "commercial_bank"
+        priority: high
+
+      - package_id: "com.example.bank_b"
+        name: "B은행"
+        company: "B은행"
+        type: "commercial_bank"
+        priority: high
+
+      - package_id: "com.example.bank_c"
+        name: "C은행"
+        company: "C은행"
+        type: "commercial_bank"
+        priority: high
+
+      - package_id: "com.example.bank_d"
+        name: "D은행"
+        company: "D은행"
+        type: "commercial_bank"
+        priority: high
+
+      - package_id: "com.example.bank_e"
+        name: "E은행"
+        company: "E은행"
+        type: "commercial_bank"
+        priority: high
+
+      - package_id: "com.example.bank_f"
+        name: "F은행"
+        company: "F은행"
+        type: "commercial_bank"
+        priority: medium
+
+      - package_id: "com.example.bank_g"
+        name: "G은행"
+        company: "G은행"
+        type: "postal_bank"
+        priority: medium
+
+      - package_id: "com.example.bank_h"
+        name: "H은행"
+        company: "H은행"
+        type: "policy_bank"
+        priority: medium
+
+      - package_id: "com.example.bank_i"
+        name: "I은행"
+        company: "I은행"
+        type: "commercial_bank"
+        priority: medium
+
+      - package_id: "com.example.bank_j"
+        name: "J은행"
+        company: "J은행"
+        type: "commercial_bank"
+        priority: medium
+
+      # 인터넷전문은행
+      - package_id: "com.example.bank_k"
+        name: "K은행"
+        company: "K은행"
+        type: "internet_bank"
+        priority: high
+
+      - package_id: "com.example.bank_l"
+        name: "L은행"
+        company: "L은행"
+        type: "internet_bank"
+        priority: high
+
+      - package_id: "com.example.bank_m"
+        name: "M은행"
+        company: "M은행"
+        type: "internet_bank"
+        priority: high
+
+      # 지방은행
+      - package_id: "com.example.bank_n"
+        name: "N은행"
+        company: "N은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_o"
+        name: "O은행"
+        company: "O은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_p"
+        name: "P은행"
+        company: "P은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_q"
+        name: "Q은행"
+        company: "Q은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_r"
+        name: "R은행"
+        company: "R은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_s"
+        name: "S은행"
+        company: "S은행"
+        type: "regional_bank"
+        priority: low
+
+      - package_id: "com.example.bank_t"
+        name: "T은행"
+        company: "T은행"
+        type: "specialized_bank"
+        priority: low
+
+  # ============================================================
+  # 증권 (Securities)
+  # ============================================================
+  securities:
+    display_name: "증권"
+    description: "증권사 MTS/HTS 앱"
+    apps:
+      - package_id: "com.example.sec_a"
+        name: "A증권"
+        company: "A증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_b"
+        name: "B증권"
+        company: "B증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_c"
+        name: "C증권"
+        company: "C증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_d"
+        name: "D증권"
+        company: "D증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_e"
+        name: "E증권"
+        company: "E증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_f"
+        name: "F증권"
+        company: "F증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_g"
+        name: "G증권"
+        company: "G증권"
+        type: "securities"
+        priority: medium
+
+      - package_id: "com.example.sec_h"
+        name: "H증권"
+        company: "H증권"
+        type: "securities"
+        priority: medium
+
+      - package_id: "com.example.sec_i"
+        name: "I증권"
+        company: "I증권"
+        type: "securities"
+        priority: high
+
+      - package_id: "com.example.sec_j"
+        name: "J증권"
+        company: "J증권"
+        type: "securities"
+        priority: medium
+
+      - package_id: "com.example.sec_k"
+        name: "K증권"
+        company: "K증권"
+        type: "securities"
+        priority: low
+
+      - package_id: "com.example.sec_l"
+        name: "L증권"
+        company: "L증권"
+        type: "securities"
+        priority: low
+
+      - package_id: "com.example.sec_m"
+        name: "M증권"
+        company: "M증권"
+        type: "securities"
+        priority: low
+
+      - package_id: "com.example.sec_n"
+        name: "N증권"
+        company: "N증권"
+        type: "securities"
+        priority: low
+
+  # ============================================================
+  # 카드 (Cards)
+  # ============================================================
+  cards:
+    display_name: "카드"
+    description: "신용카드/체크카드 앱"
+    apps:
+      - package_id: "com.example.card_a"
+        name: "A카드"
+        company: "A카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_b"
+        name: "B카드"
+        company: "B카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_c"
+        name: "C카드"
+        company: "C카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_d"
+        name: "D카드"
+        company: "D카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_e"
+        name: "E카드"
+        company: "E카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_f"
+        name: "F카드"
+        company: "F카드"
+        type: "credit_card"
+        priority: high
+
+      - package_id: "com.example.card_g"
+        name: "G카드"
+        company: "G카드"
+        type: "credit_card"
+        priority: medium
+
+      - package_id: "com.example.card_h"
+        name: "H카드"
+        company: "H카드"
+        type: "credit_card"
+        priority: medium
+
+      - package_id: "com.example.card_i"
+        name: "I카드"
+        company: "I카드"
+        type: "credit_card"
+        priority: medium
+
+  # ============================================================
+  # 생명보험 (Life Insurance)
+  # ============================================================
+  life_insurance:
+    display_name: "생명보험"
+    description: "생명보험사 앱"
+    apps:
+      - package_id: "com.example.life_a"
+        name: "A생명"
+        company: "A생명"
+        type: "life_insurance"
+        priority: high
+
+      - package_id: "com.example.life_b"
+        name: "B생명"
+        company: "B생명"
+        type: "life_insurance"
+        priority: high
+
+      - package_id: "com.example.life_c"
+        name: "C생명"
+        company: "C생명"
+        type: "life_insurance"
+        priority: high
+
+      - package_id: "com.example.life_d"
+        name: "D생명"
+        company: "D생명"
+        type: "life_insurance"
+        priority: high
+
+      - package_id: "com.example.life_e"
+        name: "E생명"
+        company: "E생명"
+        type: "life_insurance"
+        priority: medium
+
+      - package_id: "com.example.life_f"
+        name: "F생명"
+        company: "F생명"
+        type: "life_insurance"
+        priority: medium
+
+      - package_id: "com.example.life_g"
+        name: "G생명"
+        company: "G생명"
+        type: "life_insurance"
+        priority: low
+
+      - package_id: "com.example.life_h"
+        name: "H생명"
+        company: "H생명"
+        type: "life_insurance"
+        priority: low
+
+      - package_id: "com.example.life_i"
+        name: "I생명"
+        company: "I생명"
+        type: "life_insurance"
+        priority: low
+
+  # ============================================================
+  # 손해보험 (Non-Life Insurance)
+  # ============================================================
+  non_life_insurance:
+    display_name: "손해보험"
+    description: "손해보험사 앱"
+    apps:
+      - package_id: "com.example.ins_a"
+        name: "A손해보험"
+        company: "A손해보험"
+        type: "non_life_insurance"
+        priority: high
+
+      - package_id: "com.example.ins_b"
+        name: "B손해보험"
+        company: "B손해보험"
+        type: "non_life_insurance"
+        priority: high
+
+      - package_id: "com.example.ins_c"
+        name: "C손해보험"
+        company: "C손해보험"
+        type: "non_life_insurance"
+        priority: high
+
+      - package_id: "com.example.ins_d"
+        name: "D손해보험"
+        company: "D손해보험"
+        type: "non_life_insurance"
+        priority: high
+
+      - package_id: "com.example.ins_e"
+        name: "E손해보험"
+        company: "E손해보험"
+        type: "non_life_insurance"
+        priority: high
+
+      - package_id: "com.example.ins_f"
+        name: "F손해보험"
+        company: "F손해보험"
+        type: "non_life_insurance"
+        priority: medium
+
+      - package_id: "com.example.ins_g"
+        name: "G손해보험"
+        company: "G손해보험"
+        type: "non_life_insurance"
+        priority: low
+
+      - package_id: "com.example.ins_h"
+        name: "H손해보험"
+        company: "H손해보험"
+        type: "non_life_insurance"
+        priority: low
+
+  # ============================================================
+  # 핀테크 (Fintech)
+  # ============================================================
+  fintech:
+    display_name: "핀테크"
+    description: "핀테크 및 간편결제 앱"
+    apps:
+      - package_id: "com.example.pay_a"
+        name: "A페이"
+        company: "A페이"
+        type: "payment"
+        priority: high
+
+      - package_id: "com.example.pay_b"
+        name: "B페이"
+        company: "B페이"
+        type: "payment"
+        priority: high
+
+      - package_id: "com.example.pay_c"
+        name: "C페이"
+        company: "C페이"
+        type: "payment"
+        priority: high
+
+      - package_id: "com.example.pay_d"
+        name: "D페이"
+        company: "D페이"
+        type: "finance_platform"
+        priority: medium
+
+      - package_id: "com.example.pay_e"
+        name: "E페이"
+        company: "E페이"
+        type: "finance_platform"
+        priority: medium
+
+      - package_id: "com.example.pay_f"
+        name: "F페이"
+        company: "F페이"
+        type: "payment"
+        priority: medium
+
+      - package_id: "com.example.pay_g"
+        name: "G페이"
+        company: "G페이"
+        type: "payment"
+        priority: low
+
+      - package_id: "com.example.pay_h"
+        name: "H페이"
+        company: "H페이"
+        type: "payment"
+        priority: low
+
+# Monitoring settings per priority
+priority_settings:
+  high:
+    fetch_interval_hours: 4
+    alert_on_negative_spike: true
+    negative_spike_threshold: 0.2  # 20% increase in negative reviews
+  medium:
+    fetch_interval_hours: 8
+    alert_on_negative_spike: true
+    negative_spike_threshold: 0.3
+  low:
+    fetch_interval_hours: 24
+    alert_on_negative_spike: false
+    negative_spike_threshold: 0.5
+
+# App ID change tracking
+# When apps renew, their package IDs may change
+# Track previous IDs for data continuity
+app_id_history:
+  # Example entries (fictional). previous ids are merged into legacy_ids.
+  - current: "com.example.bank_c"
+    previous:
+      - id: "com.example.bank_c.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.bank_a"
+    previous:
+      - id: "com.example.bank_a.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.bank_b"
+    previous:
+      - id: "com.example.bank_b.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.bank_e"
+    previous:
+      - id: "com.example.bank_e.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.bank_f"
+    previous:
+      - id: "com.example.bank_f.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.bank_d"
+    previous:
+      - id: "com.example.bank_d.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.sec_d"
+    previous:
+      - id: "com.example.sec_d.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.sec_a"
+    previous:
+      - id: "com.example.sec_a.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.sec_c"
+    previous:
+      - id: "com.example.sec_c.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.card_d"
+    previous:
+      - id: "com.example.card_d.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.ins_b"
+    previous:
+      - id: "com.example.ins_b.legacy"
+        note: "구버전 패키지 (가상 예시)"
+
+  - current: "com.example.ins_a"
+    previous:
+      - id: "com.example.ins_a.legacy"
+        note: "구버전 패키지 (가상 예시)"

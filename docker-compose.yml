@@ -1,0 +1,26 @@
+# Local OpenSearch for the retrieval demo (single node, Nori + k-NN).
+# OPENSEARCH_PASSWORD is read from .env (OpenSearch 2.12+ requires a strong
+# initial admin password: 8+ chars with upper, lower, digit and symbol).
+services:
+  opensearch:
+    build:
+      context: ./docker/opensearch
+    container_name: krhr-opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD:?set OPENSEARCH_PASSWORD in .env}
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+volumes:
+  opensearch-data:

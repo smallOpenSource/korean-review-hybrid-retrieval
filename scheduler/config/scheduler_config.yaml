@@ -1,0 +1,237 @@
+# Scheduler Configuration
+# Main configuration for the separated scheduler service
+
+version: "1.0.0"
+
+# Scheduler settings
+scheduler:
+  # Timezone for scheduling
+  timezone: "Asia/Seoul"
+
+  # Maximum concurrent jobs
+  max_workers: 4
+
+  # Job store settings
+  job_store:
+    type: "memory"  # Options: memory, redis, sqlalchemy
+    # redis:
+    #   host: localhost
+    #   port: 6379
+    #   db: 1
+
+  # Executor settings
+  executor:
+    type: "threadpool"
+    max_workers: 10
+
+# Job schedules
+jobs:
+  # Review collection job
+  collect_reviews:
+    enabled: true
+    schedule:
+      # Run every 4 hours for high priority apps
+      high_priority:
+        trigger: "interval"
+        hours: 4
+      # Run every 8 hours for medium priority apps
+      medium_priority:
+        trigger: "interval"
+        hours: 8
+      # Run daily for low priority apps
+      low_priority:
+        trigger: "cron"
+        hour: 2
+        minute: 0
+
+    settings:
+      # Number of reviews to fetch per app
+      reviews_per_app: 200
+      # Languages to fetch
+      languages:
+        - ko
+        - en
+      # Retry settings
+      max_retries: 3
+      retry_delay_seconds: 60
+      # Rate limiting (requests per minute)
+      rate_limit: 30
+
+  # Review analysis job
+  analyze_reviews:
+    enabled: true
+    schedule:
+      trigger: "interval"
+      hours: 1
+
+    settings:
+      # Initial batch size for analysis (dynamic sizing starts at 10, grows to 40)
+      # Note: DynamicBatchSizeManager will override this value at runtime
+      batch_size: 40
+      # API endpoint for analysis
+      api_endpoint: "http://127.0.0.1:5952/api/v1/analysis/analyze"
+      # Timeout in seconds
+      timeout: 600
+
+  # Word cloud generation job
+  generate_wordcloud:
+    enabled: true
+    schedule:
+      trigger: "cron"
+      hour: 3
+      minute: 0
+
+    settings:
+      # Output directory for word clouds
+      output_dir: "./data/wordclouds"
+      # Time periods to generate
+      periods:
+        - daily
+        - weekly
+        - monthly
+      # Minimum word frequency
+      min_word_freq: 5
+      # Maximum words in cloud
+      max_words: 200
+
+  # Data cleanup job
+  cleanup_old_data:
+    enabled: true
+    schedule:
+      trigger: "cron"
+      hour: 4
+      minute: 0
+      day_of_week: "sun"
+
+    settings:
+      # Keep reviews for this many days
+      retention_days: 365
+      # Optimize tables after cleanup
+      optimize_tables: true
+
+  # Duplicate removal job
+  remove_duplicates:
+    enabled: true
+    schedule:
+      trigger: "cron"
+      hour: 1
+      minute: 30
+
+    settings:
+      # Tables to check for duplicates
+      tables:
+        - reviews
+        - analysis_results
+
+  # Sync to OpenSearch job
+  sync_to_opensearch:
+    enabled: true
+    schedule:
+      trigger: "interval"
+      minutes: 5
+    settings:
+      batch_size: 100
+
+# Database settings
+database:
+  # Main database
+  main:
+    type: "mysql"
+    host: "${SCHEDULER_DB_HOST:localhost}"
+    port: "${SCHEDULER_DB_PORT:3306}"
+    database: "${SCHEDULER_DB_NAME:appreviews}"
+    username: "${SCHEDULER_DB_USER:root}"
+    password: "${SCHEDULER_DB_PASSWORD:}"
+    pool_size: 5
+    max_overflow: 10
+    pool_timeout: 30
+    pool_recycle: 3600
+
+# Redis settings (for caching and job store)
+redis:
+  host: "${REDIS_HOST:localhost}"
+  port: "${REDIS_PORT:3310}"
+  db: "${REDIS_DB:0}"
+  password: "${REDIS_PASSWORD:}"
+  # Sentinel configuration (if using)
+  sentinel:
+    enabled: "${REDIS_SENTINEL_ENABLED:false}"
+    master_name: "${REDIS_SENTINEL_MASTER_NAME:redismaster}"
+    sentinels: [] # Will be populated from REDIS_SENTINEL_HOSTS by loader
+
+# Logging settings
+logging:
+  version: 1
+  disable_existing_loggers: false
+
+  formatters:
+    default:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    json:
+      class: "pythonjsonlogger.jsonlogger.JsonFormatter"
+      format: "%(asctime)s %(name)s %(levelname)s %(message)s"
+
+  handlers:
+    console:
+      class: "logging.StreamHandler"
+      formatter: "default"
+      level: "INFO"
+
+    file:
+      class: "logging.handlers.RotatingFileHandler"
+      filename: "logs/scheduler.log"
+      maxBytes: 10485760  # 10MB
+      backupCount: 5
+      formatter: "json"
+      level: "INFO"
+
+  root:
+    level: "INFO"
+    handlers:
+      - console
+      - file
+
+  loggers:
+    scheduler:
+      level: "DEBUG"
+    apscheduler:
+      level: "WARNING"
+
+# Alert settings
+alerts:
+  enabled: true
+
+  # Slack integration
+  slack:
+    enabled: false
+    webhook_url: "${SLACK_WEBHOOK_URL:}"
+    channel: "#app-reviews-alerts"
+
+  # Email integration
+  email:
+    enabled: false
+    smtp_host: "${SMTP_HOST:}"
+    smtp_port: "${SMTP_PORT:587}"
+    username: "${SMTP_USER:}"
+    password: "${SMTP_PASSWORD:}"
+    from_address: "scheduler@example.com"
+    to_addresses:
+      - "team@example.com"
+
+  # Alert conditions
+  conditions:
+    # Alert when negative review spike detected
+    negative_spike:
+      enabled: true
+      threshold: 0.2  # 20% increase
+      window_hours: 24
+
+    # Alert when collection fails
+    collection_failure:
+      enabled: true
+      consecutive_failures: 3
+
+    # Alert when analysis queue is backed up
+    analysis_backlog:
+      enabled: true
+      threshold: 1000  # reviews waiting for analysis

@@ -1,0 +1,96 @@
+@startuml component-diagram
+!theme plain
+title Component Diagram - App Structure
+
+skinparam backgroundColor #FFFFFF
+skinparam packageStyle rectangle
+
+package "app" {
+
+    package "config" <<Folder>> {
+        [settings.py] as Settings
+        [llm_config.py] as LLMConfig
+        [prompts.py] as Prompts
+        [llm_models.yaml] as ModelsYaml
+        [prompts.yaml] as PromptsYaml
+    }
+
+    package "core" <<Folder>> {
+        [opensearch_client.py] as OSClient
+        [redis_client.py] as RedisClient
+        [mysql_client.py] as MySQLClient
+        [rate_limiter.py] as RateLimiter
+    }
+
+    package "agents" <<Folder>> {
+        [base_agent.py] as BaseAgent
+        [llm_client.py] as LLMClient
+        [embedding_service.py] as EmbeddingService
+        [sentiment_agent.py] as SentimentAgent
+        [category_agent.py] as CategoryAgent
+        [complaint_agent.py] as ComplaintAgent
+        [insight_agent.py] as InsightAgent
+    }
+
+    package "services" <<Folder>> {
+        [review_service.py] as ReviewService
+        [dedup_service.py] as DedupService
+        [word_analysis_service.py] as WordService
+        [similar_review_service.py] as SimilarService
+    }
+
+    package "api/v1" <<Folder>> {
+        [reviews.py] as ReviewsAPI
+        [analysis.py] as AnalysisAPI
+        [complaints.py] as ComplaintsAPI
+    }
+
+    package "views" <<Folder>> {
+        [dashboard.py] as DashboardView
+        [company.py] as CompanyView
+    }
+
+    package "templates" <<Folder>> {
+        [base.html] as BaseTemplate
+        [pages/] as Pages
+        [components/] as Components
+    }
+}
+
+' Dependencies
+Settings <-- OSClient
+Settings <-- RedisClient
+Settings <-- MySQLClient
+Settings <-- LLMConfig
+
+LLMConfig <-- LLMClient
+LLMConfig <-- RateLimiter
+
+Prompts <-- BaseAgent
+LLMClient <-- BaseAgent
+
+BaseAgent <|-- SentimentAgent
+BaseAgent <|-- CategoryAgent
+BaseAgent <|-- ComplaintAgent
+BaseAgent <|-- InsightAgent
+
+LLMClient <-- EmbeddingService
+RateLimiter <-- LLMClient
+RateLimiter <-- EmbeddingService
+
+OSClient <-- ReviewService
+EmbeddingService <-- ReviewService
+OSClient <-- DedupService
+RedisClient <-- DedupService
+OSClient <-- WordService
+RedisClient <-- WordService
+OSClient <-- SimilarService
+EmbeddingService <-- SimilarService
+
+ReviewService <-- ReviewsAPI
+SimilarService <-- ReviewsAPI
+ReviewService <-- AnalysisAPI
+WordService <-- AnalysisAPI
+DedupService <-- AnalysisAPI
+
+@enduml
